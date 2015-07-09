@@ -1,0 +1,138 @@
+<html>
+<head>
+<title>Util tests</title>
+<script type='text/javascript' src='unitTest.js'></script>
+<script src="utils.js"> </script>
+
+
+<script>
+function hTestChooseN () {
+  var s = new Set(tbSet.value.split(","));
+  var results = s.chooseWithoutReplacement (n.value);
+  var x = new Array();
+  for (var i = 0; i < results.length; i++) {
+    x.push(results[i].join(","));
+  }
+  tbResult.value = x.join("\n");
+  
+}
+</script>
+</head>
+<body>
+<H1>utils tests</H1>
+
+<fieldset>
+<legend>Choose N without replacement</legend>
+<input id="tbSet" value="a,b,c,d,e">
+<input id="n" value="2">
+<input value="choose" onclick="hTestChooseN()" type="button">
+<br>
+<textarea id="tbResult" cols="40" rows="5"></textarea>
+</fieldset>
+
+</body>
+
+</html>
+
+<script type='text/javascript'>
+
+beginTests();
+
+var a = [[1], 2, 3];
+
+var a2 = [[1], 2, 3];
+
+var a3 = [3, [1], 2];
+
+testAssert("equal numbers",  equalp(1,1));
+testAssert("un-equal numbers",  ! equalp(1,2));
+testAssert("equal strings",  equalp("foo","foo"));
+
+// equalp with Array
+
+testAssert("equal arrays",  equalp(a, a2));
+testAssert("unequal arrays",  ! equalp(a2, a3));
+
+testAssert("unequal arrays",  ! equalp([1,2], [1, 2, 3]));
+
+testAssert("equal arrays",  equalp([[1], 2, [3,4]], [[1], 2, [3, 4]]));
+
+// equalp with Set
+
+var emptySet = new Set();
+var s1 = new Set(a);
+var s2 = new Set();
+
+s2.push([1]);
+s2.push(3);
+s2.push(2);
+
+testAssert("length of set is the number of elements", s1.length = 3);
+
+testAssert("set equality does not depend on order",   equalp(s1, s2));
+
+// equalp with Object
+
+var o1 = new Object();
+var o2 = new Object();
+
+o1.x = 3;
+o2.x = 3;
+
+testAssert("instance of Object is equalp to self",  (equalp(o1, o1)));
+
+testAssert("instance of Object is equalp to self",  o1.equalp(o1));
+
+testAssert("distinct instances of Object are not equalp", ! (equalp(o1, o2)));
+
+function Foo (ix) {
+  this.x = ix;
+}
+
+Foo.prototype.toString = function () {
+  return "[Foo x=" + this.x + "]";
+}
+
+Foo.prototype.equalp = function (o2) {
+  return this.x = o2.x;
+}
+
+var o3 = new Foo(4);
+var o4 = new Foo(4);
+
+testAssert("distinct instances of an Object that implements equalp may be equal",  (equalp(o3, o4)));
+
+// test more set operations
+
+
+testAssert("intersection with empty is empty", s1.intersect(emptySet).length == 0);
+testAssert("union with empty is same", equalp(s1.union(emptySet),s1));
+
+testAssert("intersection with self is self", s1.intersect(s1).length == s1.length);
+
+testAssert("contains", s1.contains(s1[0]));
+
+testAssert("subtract set from equal => empty set", s1.subtract(s2).emptyp());
+
+testAssert("set remove", s1.remove(s1[1]).length == s1.length -1);
+
+function oddp (x) { return x % 2 == 1;}
+
+testAssert("set removeIf", s1.removeIf(oddp).length == 1);
+testAssert("set removeIfNot", s1.removeIfNot(oddp).length == 2);
+
+s3 = new Set ([s1[1], [1, 2], o1]);
+
+testAssert("union of setSubtract(a,b) and intersecion(a,b) is a",
+  s1.equalp(s1.subtract(s3).union(s1.intersect(s3))));
+
+function alwaysTrue (x) {return true;}
+function neverTrue (x) {return false;}
+
+testAssert("any with f that is true",  any(a, alwaysTrue));
+
+testAssert("any with f that is never true", ! any(a, neverTrue));a
+
+endTests();
+</script>
+

@@ -1,0 +1,73 @@
+<html>
+<head>
+<title>Model tests</title>
+<script type='text/javascript' src='unitTest.js'></script>
+<script  type='text/javascript' src="utils.js"> </script>
+<script  type='text/javascript' src="model.js"> </script>
+</head>
+<body>
+<H1>Model tests </H1>
+</body>
+
+<script type='text/javascript'>
+
+var model = new_Model();
+
+beginTests();
+
+testAssert("27 cell groups", model.getCellGroups().length == 27);
+
+testAssert("18 lines", model.allLines().length == 9 + 9);
+
+testAssert("cell knows own coordinates", model.getCell(0, 0).row == 0);
+
+testAssert("9 cells in a row", model.rowCells(0, 0).length == 9);
+testAssert("9 cells in a column", model.columnCells(0, 0).length == 9);
+testAssert("9 cells in a box", model.boxCells(0, 0).length == 9);
+
+testAssert("row cells function returns a set", model.rowCells(0, 0).isSet);
+
+testAssert("cell defines equalp", typeof(model.getCell(0, 0).equalp) == "function");
+
+testAssert("a cell is equal to itself", model.getCell(0, 0).equalp(model.getCell(0, 0)));
+
+testAssert("row intersect self has nine cells", model.boxCells(0, 0).intersect(model.boxCells(0,0)).length == 9);
+
+testAssert("row intersect col has one cell", model.rowCells(0, 0).intersect(model.columnCells(0,0)).length == 1);
+
+testAssert("box intersect col has three cells", model.boxCells(0, 0).intersect(model.columnCells(0,0)).length == 3);
+
+testAssert("a row is in three boxes", model.boxesContainingCells(model.rowCells(0,0)).length  == 3);
+
+testAssert("a column is in three boxes", model.boxesContainingCells(model.columnCells(0,0)).length  == 3);
+
+testAssert("atPos within line", any(model.rowCells(0,0), function (c) {return c.atPos(0,0);}))
+
+
+testAssert("initially, there are nine possible values",
+  model.possibleValuesInCells(model.boxCells(0, 0)).length == 9);
+
+var cg = new Set([model.getCell(0,0), model.getCell(0, 1)]);
+
+model.setValue(0,0, 1);
+
+model.getCell(0,1).excludeValue(2);
+
+testAssert("after setting 1 and excluding 1, there are eight possible values",
+  model.possibleValuesInCells(cg).length == 8);
+
+model.getCell(0,1).excludeValue(3);
+
+testAssert("after setting 1 and excluding 2, there are eight possible values",
+  model.possibleValuesInCells(cg).length == 7);
+
+// since there is no controller at this point, the cell value in 0,0 is not
+// propagated
+testAssert("remaining possible values in second cell", 
+   model.getCell(0,1).possible.equalp(new Set([1, 4,5,6,7,8,9])));
+
+
+endTests();
+
+</script>
+</html>

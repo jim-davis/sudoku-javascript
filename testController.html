@@ -1,0 +1,94 @@
+<html>
+<head>
+<title>Controller tests</title>
+<script type='text/javascript' src='unitTest.js'></script>
+<script type='text/javascript' src="utils.js"> </script>
+<script type='text/javascript' src="model.js"> </script>
+<script type='text/javascript' src='controller.js'></script>
+</head>
+<body>
+<H1>Controller tests </H1>
+</body>
+
+<script type='text/javascript'>
+
+var model = new_Model();
+
+var controller = new_Controller(model);
+
+beginTests();
+
+testAssert("initially, there are nine possible values",
+  model.possibleValuesInCells(model.boxCells(0, 0)).length == 9);
+
+var cg = new Set([model.getCell(0,0), model.getCell(0, 1)]);
+
+model.setValue(0,0, 1);
+
+model.getCell(0,1).excludeValue(2);
+
+// [1] + [3,4,5,6,7,8, 9]
+testAssert("after setting (0,1) and excluding one value in (0,2), there are eight possible values in the two cells",
+  model.possibleValuesInCells(cg).length == 8);
+
+model.getCell(0,1).excludeValue(3);
+
+// [1] + [4,5,6,7,8, 9]
+testAssert("after excluding another value, there are seven possible values",
+  model.possibleValuesInCells(cg).length == 7);
+
+testAssert("remaining possible values in second cell", 
+   model.getCell(0,1).possible.equalp(new Set([ 4,5,6,7,8,9])));
+
+testAssert("in row 0, 7 cells remain where 2 is possible",
+  cellsWithPossibleValue(model.rowCells(0,0), 2).length == 7);
+
+testAssert("cell 0,2 may contain 2", equalp(cellsWithPossibleValue(model.rowCells(0,0), 2).removeIfNot(function (c) {return c.atPos(0, 2);}), new Set ([model.getCell(0,2)]) ));
+
+model.getCell(0,2).excludeValue(2);
+model.getCell(0,2).excludeValue(3);
+model.getCell(0,2).excludeValue(4);
+model.getCell(0,2).excludeValue(9);
+
+cg = new Set([model.getCell(0,0), model.getCell(0, 1), model.getCell(0,2)]);
+
+testAssert("row and box intersection", cg.equalp( model.rowCells(0,0).intersect(model.boxCells(0,0))));
+
+// the first three cells in row 0
+// 0,0 has [1]
+// 0,1 has [4,5,6,7,8,9]
+// 0,2 has [5,6,7,8]
+var cp = commonPossibilities(cg);
+
+testAssert ("common possibilities of three cells", equalp(cp, new Set([1,4,5,6,7,8,9])));
+
+model.getCell(0,1).excludeValue(4);
+
+testAssert ("common possibilities after more exlusions", equalp(commonPossibilities(cg), new Set([1,5,6,7,8,9])));
+
+testAssert ("only one cell has exactly four possibilities", 
+   cellsWithPossibilitiesSize(model.rowCells(0,0), 4).length == 1);
+
+testAssert ("and it is 0,2", 
+   cellsWithPossibilitiesSize(model.rowCells(0,0), 4)[0].atPos(0,2));
+
+model.getCell(0,7).excludeValues([1,2,3,4,5,6,7]);
+model.getCell(0,8).excludeValues([1,2,3,4,5,6,7]);
+
+testAssert ("two cells have exactly two possibilities", 
+   cellsWithPossibilitiesSize(model.rowCells(0,0), 2).length == 2);
+
+
+var ccp = cellsWithCommonPossibilities(model.rowCells(0,0), 2);
+
+testAssert("Two cells with common possibilities of (2)",
+  ccp.length == 1 &&
+  ccp[0].length == 2 &&
+  equalp(ccp[0], new Set ([ model.getCell(0,7), model.getCell(0,8) ])));
+
+
+
+endTests();
+</script>
+</html>
+

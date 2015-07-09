@@ -1,0 +1,640 @@
+<html>
+<head><title>SuDoKu in Javascript</title>
+
+<style>
+#boardHolder { 
+ }
+
+#controls {
+ padding-left: 12px;
+}
+
+#stateHolder {
+ margin-top: 12px;
+}
+
+/* board table */
+TABLE#board {border-style: solid; border-width: 2; border-color: black;}
+
+/* state table */
+TABLE#state {border-style: solid; border-width: 1; border-color: black;}
+
+/* box is a group of nine cells */
+#board .box {border-style: solid; border-width: 2; border-color: black;}
+
+/* box in the state display is more subdued */
+#state .box {border-width: 1;}
+
+/* cell in the board */
+TD.CELL {
+ border-style: solid;
+ border-width: 1; 
+ border-color: grey; 
+ font-family: sans-serif;
+}
+
+td.cell input {
+  font-size: 12pt;
+  border-style: none;
+  width: 30px;
+  height: 30px; 
+}
+
+/* if user enters a value explicitly into cell make it more prominent */
+input.given {
+ font-weight: bold;
+ font-size: 14pt;
+}
+
+td.cellstate {
+ border-style: solid;
+ border-width: 1; 
+ border-color: grey; 
+}
+
+/* holds a grid 3x3 showing the possible values for a cell */
+table.cellstate {
+ font-size: 9pt;
+ font-family: sans-serif;
+}
+
+/* a choice in the grid that is still possible */
+td.cc {
+  border-style: solid; border-width: 1; border-color: #CCCCCC;
+}
+
+/* a choice in the grid that has been rejected */
+td.cr {
+ border-style: solid; border-width: 1; border-color: #CCCCCC;
+ color: #BBBBBB;
+ background-color: #EEEEEE;
+}
+
+
+
+</style>
+<script type='text/javascript' src="utils.js"> </script>
+<script type='text/javascript' src="stringBuilder.js"> </script>
+<!--<script type='text/javascript' src="stacktrace.js"> </script>-->
+<script type='text/javascript' src="model.js"> </script>
+<script type='text/javascript' src='view.js'></script>
+<script type='text/javascript' src='controller.js'></script>
+<script>
+// This program uses the model/view/ controller design pattern
+// The model represents the cells of the board
+// The view displays them.
+// The controller has all the logic.
+
+var model;
+var view;
+var controller;
+
+function hReset () {
+ initialize();
+}
+
+function initialize () {
+  model = new_Model();
+  view = new_View(model);
+
+  // erase cells
+  for (var r = 0; r < 9; r++) {
+    for (var c = 0; c < 9; c++) {
+      view.setCellValue(r,c,"");
+    }
+  }
+
+  controller = new_Controller(model, view);
+  showRunning(false);
+  document.getElementById("stateHolder").style.visibility = "hidden";
+}
+
+function hSolve () {
+  setTimeout("solve()", 10);
+}
+
+function solve () {
+  initializeMessage("Running");
+  showRunning(true);
+  try {
+    controller.solve();
+  } catch (e) {
+    alert(e.message);
+  }
+  showRunning(false);
+  if (model.isSolved()) {
+    addMessage("solved");
+  } else {
+    addMessage("could not solve.");
+    hShowState();
+  }
+}
+
+function initializeMessage (str) {
+  document.getElementById("areaProgress").value=str;
+}
+
+function addMessage (str) {
+  document.getElementById("areaProgress").value = 
+  document.getElementById("areaProgress").value + "\n" + str;
+}
+
+function showRunning (running) {
+  document.getElementById("btnSolve").disabled = running;
+}
+
+
+function hLoaded() {
+  initialize();
+}
+
+function hShowState () {
+  document.getElementById("stateHolder").style.visibility = "visible";
+  model.showState();
+}
+
+function hCellChanged(elt) {
+  elt.className="given";
+}
+
+</script>
+</head>
+<body onload="hLoaded()">
+<h1>SuDoKu in Javascript</h1>
+
+<table id='panel' border='0' cellpadding='0' cellspacing='0'>
+<tr>
+<td valign='top' id='boardHolder'>
+
+<table id='board' border='0' cellpadding='0' cellspacing='0'>
+<tbody>
+<tr>
+ <td>
+   <table class='box' border='0' cellpadding='1' cellspacing='0'>
+     <tbody>
+      <tr>
+       <td class='cell' id='c11'><input class='cellx' onChange='hCellChanged(this)' id='b11' tabIndex='11' size='1' value=' '></td>
+       <td class='cell' id='c12'><input class='cell' onChange='hCellChanged(this)' id='b12' tabIndex='12' size='1' value=' ' ></td>
+       <td class='cell' id='c13'><input class='cell' onChange='hCellChanged(this)' id='b13' tabIndex='13' size='1' value=' ' ></td>
+     </tr>
+     <tr>
+       <td class='cell' id='c21'><input class='cell' onChange='hCellChanged(this)' id='b21' tabIndex='21' size='1' value=' '></td>
+       <td class='cell' id='c22'><input class='cell' onChange='hCellChanged(this)' id='b22' tabIndex='22' size='1' value=' '></td>
+       <td class='cell' id='c23'><input class='cell' onChange='hCellChanged(this)' id='b23' tabIndex='23' size='1' value=' '></td>
+     </tr>
+
+     <tr>
+       <td class='cell' id='c31'><input class='cell' onChange='hCellChanged(this)' id='b31' tabIndex='31' size='1' value=' '></td>
+       <td class='cell' id='c32'><input class='cell' onChange='hCellChanged(this)' id='b32' tabIndex='32' size='1' value=' '></td>
+       <td class='cell' id='c33'><input class='cell' onChange='hCellChanged(this)' id='b33' tabIndex='33' size='1' value=' '></td>
+     </tr>
+ </tbody>
+</table>
+ </td>
+
+ <td>
+   <table class='box' border='0' cellpadding='1' cellspacing='0'>
+     <tbody>
+      <tr>
+       <td class='cell' id='c14'><input class='cell' onChange='hCellChanged(this)' id='b14' tabIndex='14' size='1' value=' '></td>
+       <td class='cell' id='c15'><input class='cell' onChange='hCellChanged(this)' id='b15' tabIndex='15' size='1' value=' '></td>
+       <td class='cell' id='c16'><input class='cell' onChange='hCellChanged(this)' id='b16' tabIndex='16' size='1' value=' '></td>
+     </tr>
+     <tr>
+       <td class='cell' id='c24'><input class='cell' onChange='hCellChanged(this)' id='b24' tabIndex='24' size='1' value=' '></td>
+       <td class='cell' id='c25'><input class='cell' onChange='hCellChanged(this)' id='b25' tabIndex='25' size='1' value=' '></td>
+       <td class='cell' id='c26'><input class='cell' onChange='hCellChanged(this)' id='b26' tabIndex='26' size='1' value=' '></td>
+     </tr>
+     <tr>
+       <td class='cell' id='c34'><input class='cell' onChange='hCellChanged(this)' id='b34' tabIndex='34' size='1' value=' '></td>
+       <td class='cell' id='c35'><input class='cell' onChange='hCellChanged(this)' id='b35' tabIndex='35' size='1' value=' '></td>
+       <td class='cell' id='c36'><input class='cell' onChange='hCellChanged(this)' id='b36' tabIndex='36' size='1' value=' '></td>
+     </tr>
+ </tbody>
+</table>
+ </td>
+
+ <td>
+   <table class='box' border='0' cellpadding='1' cellspacing='0'>
+     <tbody>
+      <tr>
+       <td class='cell' id='c17'><input class='cell' onChange='hCellChanged(this)' id='b17' tabIndex='17' size='1' value=' '></td>
+       <td class='cell' id='c18'><input class='cell' onChange='hCellChanged(this)' id='b18' tabIndex='18' size='1' value=' '></td>
+       <td class='cell' id='c19'><input class='cell' onChange='hCellChanged(this)' id='b19' tabIndex='19' size='1' value=' '></td>
+     </tr>
+
+<tr>
+       <td class='cell' id='c27'><input class='cell' onChange='hCellChanged(this)' id='b27' tabIndex='27' size='1' value=' '></td>
+       <td class='cell' id='c28'><input class='cell' onChange='hCellChanged(this)' id='b28' tabIndex='28' size='1' value=' '></td>
+       <td class='cell' id='c29'><input class='cell' onChange='hCellChanged(this)' id='b29' tabIndex='29' size='1' value=' '></td>
+     </tr>
+<tr>
+
+     </tr>
+<tr>
+       <td class='cell' id='c37'><input class='cell' onChange='hCellChanged(this)' id='b37' tabIndex='37' size='1' value=' '></td>
+       <td class='cell' id='c38'><input class='cell' onChange='hCellChanged(this)' id='b38' tabIndex='38' size='1' value=' '></td>
+       <td class='cell' id='c39'><input class='cell' onChange='hCellChanged(this)' id='b39' tabIndex='39' size='1' value=' '></td>
+     </tr>
+ </tbody>
+</table>
+ </td>
+
+</tr>
+<tr>
+ <td>
+   <table class='box' border='0' cellpadding='1' cellspacing='0'>
+     <tbody>
+      <tr>
+       <td class='cell' id='c41'><input class='cell' onChange='hCellChanged(this)' id='b41' tabIndex='41' size='1' value=' '></td>
+       <td class='cell' id='c42'><input class='cell' onChange='hCellChanged(this)' id='b42' tabIndex='42' size='1' value=' '></td>
+       <td class='cell' id='c43'><input class='cell' onChange='hCellChanged(this)' id='b43' tabIndex='43' size='1' value=' '></td>
+     </tr>
+
+<tr>
+       <td class='cell' id='c51'><input class='cell' onChange='hCellChanged(this)' id='b51' tabIndex='51' size='1' value=' '></td>
+       <td class='cell' id='c52'><input class='cell' onChange='hCellChanged(this)' id='b52' tabIndex='52' size='1' value=' '></td>
+       <td class='cell' id='c53'><input class='cell' onChange='hCellChanged(this)' id='b53' tabIndex='53' size='1' value=' '></td>
+     </tr>
+
+<tr>
+       <td class='cell' id='c61'><input class='cell' onChange='hCellChanged(this)' id='b61' tabIndex='61' size='1' value=' '></td>
+       <td class='cell' id='c62'><input class='cell' onChange='hCellChanged(this)' id='b62' tabIndex='62' size='1' value=' '></td>
+       <td class='cell' id='c63'><input class='cell' onChange='hCellChanged(this)' id='b63' tabIndex='63' size='1' value=' '></td>
+     </tr>
+ </tbody>
+</table>
+ </td>
+
+ <td>
+   <table class='box' border='0' cellpadding='1' cellspacing='0'>
+     <tbody>
+      <tr>
+       <td class='cell' id='c44'><input class='cell' onChange='hCellChanged(this)' id='b44' tabIndex='44' size='1' value=' '></td>
+       <td class='cell' id='c45'><input class='cell' onChange='hCellChanged(this)' id='b45' tabIndex='45' size='1' value=' '></td>
+       <td class='cell' id='c46'><input class='cell' onChange='hCellChanged(this)' id='b46' tabIndex='46' size='1' value=' '></td>
+     </tr>
+
+<tr>
+       <td class='cell' id='c54'><input class='cell' onChange='hCellChanged(this)' id='b54' tabIndex='54' size='1' value=' '></td>
+       <td class='cell' id='c55'><input class='cell' onChange='hCellChanged(this)' id='b55' tabIndex='55' size='1' value=' '></td>
+       <td class='cell' id='c56'><input class='cell' onChange='hCellChanged(this)' id='b56' tabIndex='56' size='1' value=' '></td>
+     </tr>
+     <tr>
+       <td class='cell' id='c64'><input class='cell' onChange='hCellChanged(this)' id='b64' tabIndex='64' size='1' value=' '></td>
+       <td class='cell' id='c65'><input class='cell' onChange='hCellChanged(this)' id='b65' tabIndex='65' size='1' value=' '></td>
+       <td class='cell' id='c66'><input class='cell' onChange='hCellChanged(this)' id='b66' tabIndex='66' size='1' value=' '></td>
+     </tr>
+ </tbody>
+</table>
+ </td>
+
+ <td>
+   <table class='box' border='0' cellpadding='1' cellspacing='0'>
+     <tbody>
+      <tr>
+       <td class='cell' id='c47'><input class='cell' onChange='hCellChanged(this)' id='b47' tabIndex='47' size='1' value=' '></td>
+       <td class='cell' id='c48'><input class='cell' onChange='hCellChanged(this)' id='b48' tabIndex='48' size='1' value=' '></td>
+       <td class='cell' id='c49'><input class='cell' onChange='hCellChanged(this)' id='b49' tabIndex='49' size='1' value=' '></td>
+     </tr>
+     <tr>
+       <td class='cell' id='c57'><input class='cell' onChange='hCellChanged(this)' id='b57' tabIndex='57' size='1' value=' '></td>
+       <td class='cell' id='c58'><input class='cell' onChange='hCellChanged(this)' id='b58' tabIndex='58' size='1' value=' '></td>
+       <td class='cell' id='c59'><input class='cell' onChange='hCellChanged(this)' id='b59' tabIndex='59' size='1' value=' '></td>
+     </tr>
+     <tr>
+       <td class='cell' id='c67'><input class='cell' onChange='hCellChanged(this)' id='b67' tabIndex='67' size='1' value=' '></td>
+       <td class='cell' id='c68'><input class='cell' onChange='hCellChanged(this)' id='b68' tabIndex='68' size='1' value=' '></td>
+       <td class='cell' id='c69'><input class='cell' onChange='hCellChanged(this)' id='b69' tabIndex='69' size='1' value=' '></td>
+     </tr>
+ </tbody>
+</table>
+ </td>
+
+</tr>
+<tr>
+ <td>
+   <table class='box' border='0' cellpadding='1' cellspacing='0'>
+     <tbody>
+      <tr>
+       <td class='cell' id='c71'><input class='cell' onChange='hCellChanged(this)' id='b71' tabIndex='71' size='1' value=' '></td>
+       <td class='cell' id='c72'><input class='cell' onChange='hCellChanged(this)' id='b72' tabIndex='72' size='1' value=' '></td>
+       <td class='cell' id='c73'><input class='cell' onChange='hCellChanged(this)' id='b73' tabIndex='73' size='1' value=' '></td>
+     </tr>
+
+<tr>
+       <td class='cell' id='c81'><input class='cell' onChange='hCellChanged(this)' id='b81' tabIndex='81' size='1' value=' '></td>
+       <td class='cell' id='c82'><input class='cell' onChange='hCellChanged(this)' id='b82' tabIndex='82' size='1' value=' '></td>
+       <td class='cell' id='c83'><input class='cell' onChange='hCellChanged(this)' id='b83' tabIndex='83' size='1' value=' '></td>
+     </tr>
+<tr>
+
+     </tr>
+<tr>
+       <td class='cell' id='c91'><input class='cell' onChange='hCellChanged(this)' id='b91' tabIndex='91' size='1' value=' '></td>
+       <td class='cell' id='c92'><input class='cell' onChange='hCellChanged(this)' id='b92' tabIndex='92' size='1' value=' '></td>
+       <td class='cell' id='c93'><input class='cell' onChange='hCellChanged(this)' id='b93' tabIndex='93' size='1' value=' '></td>
+     </tr>
+ </tbody>
+</table>
+ </td>
+
+ <td>
+   <table class='box' border='0' cellpadding='1' cellspacing='0'>
+     <tbody>
+      <tr>
+       <td class='cell' id='c74'><input class='cell' onChange='hCellChanged(this)' id='b74' tabIndex='74' size='1' value=' '></td>
+       <td class='cell' id='c75'><input class='cell' onChange='hCellChanged(this)' id='b75' tabIndex='75' size='1' value=' '></td>
+       <td class='cell' id='c76'><input class='cell' onChange='hCellChanged(this)' id='b76' tabIndex='76' size='1' value=' '></td>
+     </tr>
+
+<tr>
+       <td class='cell' id='c84'><input class='cell' onChange='hCellChanged(this)' id='b84' tabIndex='84' size='1' value=' '></td>
+       <td class='cell' id='c85'><input class='cell' onChange='hCellChanged(this)' id='b85' tabIndex='85' size='1' value=' '></td>
+       <td class='cell' id='c86'><input class='cell' onChange='hCellChanged(this)' id='b86' tabIndex='86' size='1' value=' '></td>
+     </tr>
+<tr>
+
+     </tr>
+<tr>
+       <td class='cell' id='c94'><input class='cell' onChange='hCellChanged(this)' id='b94' tabIndex='94' size='1' value=' '></td>
+       <td class='cell' id='c95'><input class='cell' onChange='hCellChanged(this)' id='b95' tabIndex='95' size='1' value=' '></td>
+       <td class='cell' id='c96'><input class='cell' onChange='hCellChanged(this)' id='b96' tabIndex='96' size='1' value=' '></td>
+     </tr>
+ </tbody>
+</table>
+ </td>
+
+ <td>
+   <table class='box' border='0' cellpadding='1' cellspacing='0'>
+     <tbody>
+      <tr>
+       <td class='cell' id='c77'><input class='cell' onChange='hCellChanged(this)' id='b77' tabIndex='77' size='1' value=' '></td>
+       <td class='cell' id='c78'><input class='cell' onChange='hCellChanged(this)' id='b78' tabIndex='78' size='1' value=' '></td>
+       <td class='cell' id='c79'><input class='cell' onChange='hCellChanged(this)' id='b79' tabIndex='79' size='1' value=' '></td>
+     </tr>
+
+<tr>
+       <td class='cell' id='c87'><input class='cell' onChange='hCellChanged(this)' id='b87' tabIndex='87' size='1' value=' '></td>
+       <td class='cell' id='c88'><input class='cell' onChange='hCellChanged(this)' id='b88' tabIndex='88' size='1' value=' '></td>
+       <td class='cell' id='c89'><input class='cell' onChange='hCellChanged(this)' id='b89' tabIndex='89' size='1' value=' '></td>
+     </tr>
+<tr>
+
+     </tr>
+<tr>
+       <td class='cell' id='c97'><input class='cell' onChange='hCellChanged(this)' id='b97' tabIndex='97' size='1' value=' '></td>
+       <td class='cell' id='c98'><input class='cell' onChange='hCellChanged(this)' id='b98' tabIndex='98' size='1' value=' '></td>
+       <td class='cell' id='c99'><input class='cell' onChange='hCellChanged(this)' id='b99' tabIndex='99' size='1' value=' '></td>
+     </tr>
+ </tbody>
+</table>
+ </td>
+</tr>
+</tbody>
+</table>
+
+</td>
+
+<td valign='top' >
+<div id='controls'>
+Enter known values into cells, then click  <input id='btnSolve' value='Solve' onclick='hSolve()' type='button'><br>
+To erase and start over, click <input id='btnReset' value='Reset' onclick='hReset()' type='button'><br>
+
+<p>
+While the program is running, your browser may display a dialog box
+informing you of a "slow" or "unresponsive" script.  If so, please allow the script to continue.
+
+If the program fails to solve the problem, then clicking
+<input value='Show State' onclick='hShowState()' type='button'>
+shows, for each cell, the set of values that have <i>not</i> been eliminated.
+</p>
+
+<p>
+<textarea id='areaProgress'
+  rows='5' 
+  cols='50'
+>
+</textarea>
+<p>Written by Jim Davis, July 2005.<br>
+Updated April, 2007.  Now solves more puzzles than previously, and show State now works on Firefox.</p>
+
+</div>
+
+</td>
+</tr>
+</table>
+
+<div id='stateHolder' style='visibility: hidden'>
+<table id='state' border='0' cellpadding='0' cellspacing='0' >
+<tbody>
+      <tr>
+ <td>
+   <table class='box' border='0' cellpadding='1' cellspacing='2'>
+     <tbody>
+      <tr>
+       <td class='cellstate' id='s11' >&nbsp;</td>
+       <td class='cellstate' id='s12' >&nbsp;</td>
+       <td class='cellstate' id='s13' >&nbsp;</td>
+     </tr>
+     <tr>
+       <td class='cellstate' id='s21'>&nbsp;</td>
+       <td class='cellstate' id='s22'>&nbsp;</td>
+       <td class='cellstate' id='s23'>&nbsp;</td>
+     </tr>
+     <tr>
+       <td class='cellstate' id='s31'>&nbsp;</td>
+       <td class='cellstate' id='s32'>&nbsp;</td>
+       <td class='cellstate' id='s33'>&nbsp;</td>
+     </tr>
+ </tbody>
+</table>
+ </td>
+
+ <td>
+   <table class='box' border='0' cellpadding='1' cellspacing='2'>
+     <tbody>
+      <tr>
+       <td class='cellstate' id='s14'>&nbsp;</td>
+       <td class='cellstate' id='s15'>&nbsp;</td>
+       <td class='cellstate' id='s16'>&nbsp;</td>
+     </tr>
+     <tr>
+       <td class='cellstate' id='s24'>&nbsp;</td>
+       <td class='cellstate' id='s25'>&nbsp;</td>
+       <td class='cellstate' id='s26'>&nbsp;</td>
+     </tr>
+     <tr>
+       <td class='cellstate' id='s34'>&nbsp;</td>
+       <td class='cellstate' id='s35'>&nbsp;</td>
+       <td class='cellstate' id='s36'>&nbsp;</td>
+     </tr>
+ </tbody>
+</table>
+ </td>
+
+ <td>
+   <table class='box' border='0' cellpadding='1' cellspacing='2'>
+     <tbody>
+      <tr>
+       <td class='cellstate' id='s17'>&nbsp;</td>
+       <td class='cellstate' id='s18'>&nbsp;</td>
+       <td class='cellstate' id='s19'>&nbsp;</td>
+     </tr>
+
+<tr>
+       <td class='cellstate' id='s27'>&nbsp;</td>
+       <td class='cellstate' id='s28'>&nbsp;</td>
+       <td class='cellstate' id='s29'>&nbsp;</td>
+     </tr>
+     <tr>
+       <td class='cellstate' id='s37'>&nbsp;</td>
+       <td class='cellstate' id='s38'>&nbsp;</td>
+       <td class='cellstate' id='s39'>&nbsp;</td>
+     </tr>
+ </tbody>
+</table>
+ </td>
+
+</tr>
+<tr>
+ <td>
+   <table class='box' border='0' cellpadding='1' cellspacing='2'>
+     <tbody>
+      <tr>
+       <td class='cellstate' id='s41'>&nbsp;</td>
+       <td class='cellstate' id='s42'>&nbsp;</td>
+       <td class='cellstate' id='s43'>&nbsp;</td>
+     </tr>
+     <tr>
+       <td class='cellstate' id='s51'>&nbsp;</td>
+       <td class='cellstate' id='s52'>&nbsp;</td>
+       <td class='cellstate' id='s53'>&nbsp;</td>
+     </tr>
+     <tr>
+       <td class='cellstate' id='s61'>&nbsp;</td>
+       <td class='cellstate' id='s62'>&nbsp;</td>
+       <td class='cellstate' id='s63'>&nbsp;</td>
+     </tr>
+ </tbody>
+</table>
+ </td>
+
+ <td>
+   <table class='box' border='0' cellpadding='1' cellspacing='2'>
+     <tbody>
+      <tr>
+       <td class='cellstate' id='s44'>&nbsp;</td>
+       <td class='cellstate' id='s45'>&nbsp;</td>
+       <td class='cellstate' id='s46'>&nbsp;</td>
+     </tr>
+     <tr>
+       <td class='cellstate' id='s54'>&nbsp;</td>
+       <td class='cellstate' id='s55'>&nbsp;</td>
+       <td class='cellstate' id='s56'>&nbsp;</td>
+     </tr>
+     <tr>
+       <td class='cellstate' id='s64'>&nbsp;</td>
+       <td class='cellstate' id='s65'>&nbsp;</td>
+       <td class='cellstate' id='s66'>&nbsp;</td>
+     </tr>
+ </tbody>
+</table>
+ </td>
+
+ <td>
+   <table class='box' border='0' cellpadding='1' cellspacing='2'>
+     <tbody>
+      <tr>
+       <td class='cellstate' id='s47'>&nbsp;</td>
+       <td class='cellstate' id='s48'>&nbsp;</td>
+       <td class='cellstate' id='s49'>&nbsp;</td>
+     </tr>
+     <tr>
+       <td class='cellstate' id='s57'>&nbsp;</td>
+       <td class='cellstate' id='s58'>&nbsp;</td>
+       <td class='cellstate' id='s59'>&nbsp;</td>
+     </tr>
+     <tr>
+       <td class='cellstate' id='s67'>&nbsp;</td>
+       <td class='cellstate' id='s68'>&nbsp;</td>
+       <td class='cellstate' id='s69'>&nbsp;</td>
+     </tr>
+ </tbody>
+</table>
+ </td>
+
+</tr>
+<tr>
+ <td>
+   <table class='box' border='0' cellpadding='1' cellspacing='2'>
+     <tbody>
+      <tr>
+       <td class='cellstate' id='s71'>&nbsp;</td>
+       <td class='cellstate' id='s72'>&nbsp;</td>
+       <td class='cellstate' id='s73'>&nbsp;</td>
+     </tr>
+     <tr>
+       <td class='cellstate' id='s81'>&nbsp;</td>
+       <td class='cellstate' id='s82'>&nbsp;</td>
+       <td class='cellstate' id='s83'>&nbsp;</td>
+     </tr>
+     <tr>
+       <td class='cellstate' id='s91'>&nbsp;</td>
+       <td class='cellstate' id='s92'>&nbsp;</td>
+       <td class='cellstate' id='s93'>&nbsp;</td>
+     </tr>
+ </tbody>
+</table>
+ </td>
+
+ <td>
+   <table class='box' border='0' cellpadding='1' cellspacing='2'>
+     <tbody>
+      <tr>
+       <td class='cellstate' id='s74'>&nbsp;</td>
+       <td class='cellstate' id='s75'>&nbsp;</td>
+       <td class='cellstate' id='s76'>&nbsp;</td>
+     </tr>
+     <tr>
+       <td class='cellstate' id='s84'>&nbsp;</td>
+       <td class='cellstate' id='s85'>&nbsp;</td>
+       <td class='cellstate' id='s86'>&nbsp;</td>
+     </tr>
+     <tr>
+       <td class='cellstate' id='s94'>&nbsp;</td>
+       <td class='cellstate' id='s95'>&nbsp;</td>
+       <td class='cellstate' id='s96'>&nbsp;</td>
+     </tr>
+  </tbody>
+ </table>
+ </td>
+ <td>
+   <table class='box' border='0' cellpadding='1' cellspacing='2'>
+     <tbody>
+      <tr>
+       <td class='cellstate' id='s77'>&nbsp;</td>
+       <td class='cellstate' id='s78'>&nbsp;</td>
+       <td class='cellstate' id='s79'>&nbsp;</td>
+     </tr>
+     <tr>
+       <td class='cellstate' id='s87'>&nbsp;</td>
+       <td class='cellstate' id='s88'>&nbsp;</td>
+       <td class='cellstate' id='s89'>&nbsp;</td>
+     </tr>
+     <tr>
+       <td class='cellstate' id='s97'>&nbsp;</td>
+       <td class='cellstate' id='s98'>&nbsp;</td>
+       <td class='cellstate' id='s99'>&nbsp;</td>
+     </tr>
+  </tbody>
+  </table>
+ </td>
+</tr>
+</tbody>
+</table>
+</div>
+
+
+</body>
+</html>
